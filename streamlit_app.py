@@ -187,7 +187,6 @@ QUIZ_DATA = [
     {"fase": "texto", "tema": "🔮 O AMULETO", "q": "Se essa tatuagem funcionasse como um feitiço de poder, o que ela atrairia para a sua vida ou o que ela repeliria?"}
 ]
 
-# Catálogos Visuais (Modo Tradicional)
 CATALOGO_ESTILOS = [
     "Blackwork (Trabalho em Preto Focadão)", "Fine Line (Linhas Finas e Delicadas)", "Realismo P&B (Sombras Clássicas)", 
     "Irezumi (Japonês Tradicional Colorido)", "Oriental P&B (Japonês apenas Preto e Cinza)", "Realismo Colorido (Cores Vivas)", 
@@ -255,7 +254,6 @@ def gerar_imagem(prompt_ingles, estilo):
     return None
 
 def processar_briefing(dados, modo):
-    # REGRA BRUTAL DE ANTI-GENERALIZAÇÃO ANIMAL/ELEMENTAR
     regra_traducao = "CRITICAL RULE FOR IMAGE PROMPT: Translate specific biological species and elements LITERALLY from Portuguese to English. If the user asks for 'Jaguatirica' -> use 'Ocelot'. 'Onça' -> 'Jaguar'. DO NOT generalize to 'Tiger' or 'Lion'. If they ask for 'Carpa' -> 'Koi'. NEVER alter the requested species or elements."
 
     if modo == "Quiz":
@@ -283,19 +281,50 @@ def processar_briefing(dados, modo):
         f"BOOK: [Manifesto em 3 partes curtas. {formato_extra} MÁXIMO 180 PALAVRAS para caber perfeitamente no PDF.]"
     )
     
-    payload = {"contents": [{"parts": [{"text": prompt_mestre}]}]}
-    for _ in range(3):
+    # BYPASS DE CENSURA DO GOOGLE (Para aceitar temas pesados como Caveiras, Morte, Visceral)
+    payload = {
+        "contents": [{"parts": [{"text": prompt_mestre}]}],
+        "safetySettings": [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
+        ]
+    }
+    
+    ultimo_erro = ""
+    for tentativa in range(3):
         r = requests.post(URL_GEMINI, json=payload)
+        
         if r.status_code == 200:
-            res_text = r.json()['candidates'][0]['content']['parts'][0]['text']
-            if "BOOK:" in res_text:
-                partes = res_text.split("BOOK:")
-                prompt_raw = partes[0].replace("PROMPT:", "").strip()
-                book_content = partes[1].strip()
-                img_b64 = gerar_imagem(prompt_raw, dados.get('estilo', 'Blackwork'))
-                return img_b64, book_content, prompt_raw, None
-        time.sleep(1)
-    return None, None, None, "Erro no servidor de IA."
+            dados_json = r.json()
+            if 'promptFeedback' in dados_json and 'blockReason' in dados_json['promptFeedback']:
+                return None, None, None, f"⚠️ Censura do Google: Bloqueado por {dados_json['promptFeedback']['blockReason']}"
+                
+            try:
+                res_text = dados_json['candidates'][0]['content']['parts'][0]['text']
+                res_text = res_text.replace("**PROMPT:**", "PROMPT:").replace("**BOOK:**", "BOOK:")
+                
+                if "BOOK:" in res_text:
+                    partes = res_text.split("BOOK:")
+                    prompt_raw = partes[0].replace("PROMPT:", "").strip()
+                    book_content = partes[1].strip()
+                    img_b64 = gerar_imagem(prompt_raw, dados.get('estilo', 'Blackwork'))
+                    return img_b64, book_content, prompt_raw, None
+                else:
+                    ultimo_erro = "A IA não enviou a palavra 'BOOK:' no formato exigido."
+            except KeyError:
+                if 'finishReason' in str(dados_json):
+                     motivo = dados_json['candidates'][0].get('finishReason', 'Desconhecido')
+                     if motivo != "STOP":
+                         return None, None, None, f"⚠️ A IA recusou gerar a arte (Motivo: {motivo})."
+                ultimo_erro = "Erro interno ao ler a resposta da IA."
+        else:
+            ultimo_erro = f"Erro {r.status_code} na API. (Sobrecarga ou Rate Limit)"
+            
+        time.sleep(2)
+        
+    return None, None, None, f"Falha após 3 tentativas. Detalhe: {ultimo_erro}"
 
 def refinar_prompt_correcao(prompt_atual, correcao_usuario):
     prompt_refinamento = (
@@ -470,7 +499,7 @@ else:
                     st.session_state.estilo_atual = novo_estilo
                     st.session_state.tom_atual = novo_tom
                     st.rerun()
-                else: st.error("Erro ao gerar alternativa.")
+                else: st.error("Erro ao gerar alternativa: " + erro_alt)
     
     st.markdown("---")
     st.markdown("<div class='tech-label'>THE TATTOO BOOK</div>", unsafe_allow_html=True)
