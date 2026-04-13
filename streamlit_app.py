@@ -1,8 +1,3 @@
-Papo reto: tá na mão. Sem pedaços, sem enrolação. Esse é o arquivo app.py definitivo e blindado, já com o esquema do "Cofre" (st.secrets) para o Google não derrubar a sua chave na nuvem, com o Quiz Psicológico avançado, a trava de tradução e o bypass de censura.
-
-Apague ABSOLUTAMENTE TUDO no seu arquivo atual, copie o bloco inteiro abaixo e cole.
-
-Python
 import streamlit as st
 import requests
 import base64
