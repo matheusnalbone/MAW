@@ -1,3 +1,8 @@
+Papo reto: tá na mão. Sem pedaços, sem enrolação. Esse é o arquivo app.py definitivo e blindado, já com o esquema do "Cofre" (st.secrets) para o Google não derrubar a sua chave na nuvem, com o Quiz Psicológico avançado, a trava de tradução e o bypass de censura.
+
+Apague ABSOLUTAMENTE TUDO no seu arquivo atual, copie o bloco inteiro abaixo e cole.
+
+Python
 import streamlit as st
 import requests
 import base64
@@ -58,14 +63,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-API_KEY = "AIzaSyCqs6VV8lk5OUchcEViJZNRWU-RcJikDjM"
+# ==========================================
+# SISTEMA DE COFRE (PROTEÇÃO CONTRA ERRO 403)
+# ==========================================
+try:
+    API_KEY = st.secrets["GEMINI_API_KEY"]
+except:
+    # Se você for rodar no seu computador (sem ser na nuvem), cole a chave nova aqui dentro das aspas:
+    API_KEY = "COLE_SUA_CHAVE_AQUI_SE_FOR_RODAR_LOCAL"
+
 URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY
 
 # ==========================================
-# ESTRUTURA PSICOLÓGICA DO QUIZ (6 OPÇÕES FORÇADAS)
+# ESTRUTURA PSICOLÓGICA DO QUIZ
 # ==========================================
 QUIZ_DATA = [
-    # FASE 1: INSTINTO E ESTÉTICA (15 Perguntas - 6 opções cada)
     {"fase": "mcq", "tema": "🔥 O RECARGA (MBTI)", "q": "Como você recarrega sua energia mental após uma semana exaustiva?", "opts": [
         "Isolamento total na natureza ou no silêncio profundo.", 
         "Criando algo, desenhando ou construindo com as mãos.", 
@@ -172,14 +184,12 @@ QUIZ_DATA = [
         "A Tradição e a Ruptura (Estátuas clássicas vandalizadas com pichações urbanas).", 
         "A Ciência e o Ocultismo (Anatomia médica misturada com geometria sagrada)."]},
     
-    # FASE 2: INTENSIDADE (Escala Forçada de 1 a 6 - Sem Neutro)
     {"fase": "escala", "tema": "⚖️ ESCALA DE INTENSIDADE 1", "q": "A ordem, a geometria e a simetria me trazem mais paz e conforto do que a imprevisibilidade e o caos livre das manchas.", "opts": ["1 - Discordo Totalmente", "2 - Discordo Fortemente", "3 - Discordo Levemente", "4 - Concordo Levemente", "5 - Concordo Fortemente", "6 - Concordo Totalmente"]},
     {"fase": "escala", "tema": "⚖️ ESCALA DE INTENSIDADE 2", "q": "Eu prefiro que minha dor e minhas cicatrizes sejam vistas e eternizadas como um troféu orgulhoso, do que escondidas do mundo.", "opts": ["1 - Discordo Totalmente", "2 - Discordo Fortemente", "3 - Discordo Levemente", "4 - Concordo Levemente", "5 - Concordo Fortemente", "6 - Concordo Totalmente"]},
     {"fase": "escala", "tema": "⚖️ ESCALA DE INTENSIDADE 3", "q": "Sinto uma conexão muito mais magnética com temas espirituais, mitológicos e invisíveis do que com a realidade material e concreta.", "opts": ["1 - Discordo Totalmente", "2 - Discordo Fortemente", "3 - Discordo Levemente", "4 - Concordo Levemente", "5 - Concordo Fortemente", "6 - Concordo Totalmente"]},
     {"fase": "escala", "tema": "⚖️ ESCALA DE INTENSIDADE 4", "q": "A estética brutal, visceral e agressiva reflete a realidade do mundo de forma muito mais honesta do que a beleza clássica e polida.", "opts": ["1 - Discordo Totalmente", "2 - Discordo Fortemente", "3 - Discordo Levemente", "4 - Concordo Levemente", "5 - Concordo Fortemente", "6 - Concordo Totalmente"]},
     {"fase": "escala", "tema": "⚖️ ESCALA DE INTENSIDADE 5", "q": "Minha tatuagem não tem nenhuma obrigação de ser 'bonita' ou 'agradável' para os outros, ela só precisa transbordar a minha verdade.", "opts": ["1 - Discordo Totalmente", "2 - Discordo Fortemente", "3 - Discordo Levemente", "4 - Concordo Levemente", "5 - Concordo Fortemente", "6 - Concordo Totalmente"]},
 
-    # FASE 3: A ALMA (Discursivas finais para consolidar a inspiração)
     {"fase": "texto", "tema": "🧠 MEMÓRIA", "q": "Qual é a memória ou momento exato da sua vida que você nunca quer esquecer?"},
     {"fase": "texto", "tema": "🧬 ESSÊNCIA", "q": "Se você pudesse resumir sua essência em uma única palavra, frase ou citação, qual seria?"},
     {"fase": "texto", "tema": "⚔️ CICATRIZ", "q": "Existe algum obstáculo insuperável, perda ou trauma que você precisou vencer e que te transformou?"},
@@ -257,7 +267,7 @@ def processar_briefing(dados, modo):
     regra_traducao = "CRITICAL RULE FOR IMAGE PROMPT: Translate specific biological species and elements LITERALLY from Portuguese to English. If the user asks for 'Jaguatirica' -> use 'Ocelot'. 'Onça' -> 'Jaguar'. DO NOT generalize to 'Tiger' or 'Lion'. If they ask for 'Carpa' -> 'Koi'. NEVER alter the requested species or elements."
 
     if modo == "Quiz":
-        nivel_book = "Este é o modo QUIZ GUIADO SINESTÉSICO. Leia atentamente as 25 escolhas psicológicas e filosóficas do cliente. DEDUZA o melhor conceito visual, os elementos, o estilo e o tom."
+        nivel_book = "Este é o modo QUIZ GUIADO SINESTÉSICO. Leia atentamente as 25 escolhas psicológicas do cliente. DEDUZA o melhor conceito visual, os elementos, o estilo e o tom."
         contexto_cliente = f"RESPOSTAS DO QUIZ:\n{dados['respostas_quiz']}"
         formato_extra = "Inicie o manifesto explicando de forma imersiva POR QUE este desenho e estilo traduzem a mente e a história do cliente."
     elif modo == "Completo":
@@ -278,10 +288,10 @@ def processar_briefing(dados, modo):
         f"DADOS DO CLIENTE:\n{contexto_cliente}\n"
         "FORMATO DE RESPOSTA OBRIGATÓRIO:\n"
         "PROMPT: [Instrução técnica para gerar a imagem em INGLÊS. Cumpra a regra de tradução literal. Descreva APENAS a arte visual centrada.]\n"
-        f"BOOK: [Manifesto em 3 partes curtas. {formato_extra} MÁXIMO 180 PALAVRAS para caber perfeitamente no PDF.]"
+        f"BOOK: [Manifesto em 3 partes curtas. {formato_extra} MÁXIMO 180 PALAVRAS para caber perfeitamente no PDF HTML.]"
     )
     
-    # BYPASS DE CENSURA DO GOOGLE (Para aceitar temas pesados como Caveiras, Morte, Visceral)
+    # BYPASS DE CENSURA DO GOOGLE
     payload = {
         "contents": [{"parts": [{"text": prompt_mestre}]}],
         "safetySettings": [
@@ -320,7 +330,7 @@ def processar_briefing(dados, modo):
                          return None, None, None, f"⚠️ A IA recusou gerar a arte (Motivo: {motivo})."
                 ultimo_erro = "Erro interno ao ler a resposta da IA."
         else:
-            ultimo_erro = f"Erro {r.status_code} na API. (Sobrecarga ou Rate Limit)"
+            ultimo_erro = f"Erro {r.status_code} na API. (Pode ser erro 403 se a chave não estiver no Secrets)"
             
         time.sleep(2)
         
@@ -359,7 +369,7 @@ if st.session_state.res_img is None:
     dados_briefing = {}
     
     # ---------------------------------------------------------
-    # FLUXO DO QUIZ SINESTÉSICO (SLIDE-BY-SLIDE)
+    # FLUXO DO QUIZ SINESTÉSICO
     # ---------------------------------------------------------
     if modo_briefing == "Quiz Guiado (Estou em Branco)":
         total_q = len(QUIZ_DATA)
@@ -405,7 +415,7 @@ if st.session_state.res_img is None:
         else:
             st.success("Ritual de Mapeamento Concluído.")
             st.markdown("### A MATRIZ ESTÁ PRONTA PARA SER REVELADA")
-            st.info("A Inteligência Psicanalítica do estúdio vai ler todas as suas 25 respostas para deduzir o conceito, o traço e o sentimento da tatuagem perfeita para a sua pele.")
+            st.info("A Inteligência Psicanalítica do estúdio vai ler todas as suas 25 respostas para deduzir o conceito, o traço e o sentimento da tatuagem perfeita.")
             
             if st.button("PROCESSAR ALQUIMIA VISUAL (GERAR TATTOO)"):
                 with st.spinner("CRUZANDO DADOS PSICOLÓGICOS, RENDERIZANDO ARTE EM 8K..."):
@@ -499,7 +509,7 @@ else:
                     st.session_state.estilo_atual = novo_estilo
                     st.session_state.tom_atual = novo_tom
                     st.rerun()
-                else: st.error("Erro ao gerar alternativa: " + erro_alt)
+                else: st.error(erro_alt)
     
     st.markdown("---")
     st.markdown("<div class='tech-label'>THE TATTOO BOOK</div>", unsafe_allow_html=True)
